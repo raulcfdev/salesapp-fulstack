@@ -1,0 +1,192 @@
+<!-- src/app/components/order-form/order-form.component.html -->
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Novo Pedido</h2>
+    <button class="btn btn-secondary" routerLink="/orders">Voltar</button>
+  </div>
+  
+  <div *ngIf="loading" class="text-center my-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Carregando...</span>
+    </div>
+  </div>
+  
+  <form *ngIf="!loading" [formGroup]="orderForm" (ngSubmit)="onSubmit()">
+    <div class="card mb-4">
+      <div class="card-header bg-light">
+        <h5 class="mb-0">Informações do Cliente</h5>
+      </div>
+      <div class="card-body">
+        <!-- Seleção de cliente existente -->
+        <div class="mb-3" *ngIf="!showNewCustomerForm || customers.length > 0">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <label for="customerRefId" class="form-label">Cliente</label>
+            <button 
+              type="button" 
+              class="btn btn-sm btn-primary" 
+              (click)="toggleNewCustomerForm()" 
+              *ngIf="!showNewCustomerForm"
+            >
+              <i class="bi bi-plus-circle"></i> Novo Cliente
+            </button>
+          </div>
+          <select 
+            class="form-select" 
+            id="customerRefId" 
+            formControlName="customerRefId"
+            [class.is-invalid]="orderForm.get('customerRefId')?.invalid && orderForm.get('customerRefId')?.touched"
+          >
+            <option value="">Selecione um cliente</option>
+            <option *ngFor="let customer of customers" [value]="customer.customerId">
+              {{ customer.customerName }}
+            </option>
+          </select>
+          <div class="invalid-feedback" *ngIf="orderForm.get('customerRefId')?.invalid && orderForm.get('customerRefId')?.touched">
+            Cliente é obrigatório.
+          </div>
+        </div>
+        
+        <!-- Formulário para adicionar novo cliente -->
+        <div *ngIf="showNewCustomerForm" class="mt-3 mb-3 p-3 border rounded bg-light">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0">Adicionar Novo Cliente</h6>
+            <button 
+              type="button" 
+              class="btn btn-sm btn-outline-secondary" 
+              (click)="toggleNewCustomerForm()"
+              *ngIf="customers.length > 0"
+            >
+              <i class="bi bi-x"></i> Cancelar
+            </button>
+          </div>
+          
+          <form [formGroup]="newCustomerForm" (ngSubmit)="createNewCustomer()">
+            <div class="mb-3">
+              <label for="customerName" class="form-label">Nome do Cliente</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="customerName" 
+                formControlName="customerName"
+                [class.is-invalid]="newCustomerForm.get('customerName')?.invalid && newCustomerForm.get('customerName')?.touched"
+              >
+              <div class="invalid-feedback" *ngIf="newCustomerForm.get('customerName')?.invalid && newCustomerForm.get('customerName')?.touched">
+                Nome do cliente é obrigatório.
+              </div>
+            </div>
+            
+            <div class="d-flex justify-content-end">
+              <button 
+                type="submit" 
+                class="btn btn-primary" 
+                [disabled]="creatingCustomer"
+              >
+                <span *ngIf="creatingCustomer" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                Adicionar Cliente
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card mb-4">
+      <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Itens do Pedido</h5>
+        <button type="button" class="btn btn-sm btn-primary" (click)="addOrderItem()">
+          <i class="bi bi-plus-circle"></i> Adicionar Item
+        </button>
+      </div>
+      <div class="card-body">
+        <div formArrayName="orderItems">
+          <div *ngFor="let item of orderItems.controls; let i = index" [formGroupName]="i" class="row mb-3 pb-3 border-bottom">
+            <div class="col-md-4 mb-3">
+              <label [attr.for]="'productName-' + i" class="form-label">Produto</label>
+              <input 
+                [id]="'productName-' + i"
+                type="text" 
+                class="form-control"
+                formControlName="productName"
+                [class.is-invalid]="orderItems.at(i).get('productName')?.invalid && orderItems.at(i).get('productName')?.touched"
+              >
+              <div class="invalid-feedback" *ngIf="orderItems.at(i).get('productName')?.invalid && orderItems.at(i).get('productName')?.touched">
+                Nome do produto é obrigatório.
+              </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+              <label [attr.for]="'quantity-' + i" class="form-label">Quantidade</label>
+              <input 
+                [id]="'quantity-' + i"
+                type="number" 
+                class="form-control" 
+                formControlName="quantity" 
+                min="1"
+                [class.is-invalid]="orderItems.at(i).get('quantity')?.invalid && orderItems.at(i).get('quantity')?.touched"
+              >
+              <div class="invalid-feedback" *ngIf="orderItems.at(i).get('quantity')?.invalid && orderItems.at(i).get('quantity')?.touched">
+                Quantidade deve ser maior que zero.
+              </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+              <label [attr.for]="'unitPrice-' + i" class="form-label">Preço Unitário</label>
+              <div class="input-group">
+                <span class="input-group-text">R$</span>
+                <input 
+                  [id]="'unitPrice-' + i"
+                  type="number" 
+                  class="form-control" 
+                  formControlName="unitPrice" 
+                  step="0.01" 
+                  min="0.01"
+                  [class.is-invalid]="orderItems.at(i).get('unitPrice')?.invalid && orderItems.at(i).get('unitPrice')?.touched"
+                >
+                <div class="invalid-feedback" *ngIf="orderItems.at(i).get('unitPrice')?.invalid && orderItems.at(i).get('unitPrice')?.touched">
+                  Preço unitário deve ser maior que zero.
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-md-2 mb-3">
+              <label class="form-label">Subtotal</label>
+              <div class="input-group">
+                <span class="input-group-text">R$</span>
+                <input type="text" class="form-control" [value]="calculateSubtotal(i) | number:'1.2-2'" readonly>
+              </div>
+            </div>
+            
+            <div class="col-12 text-end">
+              <button type="button" class="btn btn-danger btn-sm" (click)="removeOrderItem(i)" [disabled]="orderItems.length <= 1">
+                <i class="bi bi-trash"></i> Remover
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer bg-light">
+        <div class="row">
+          <div class="col-md-4 offset-md-8">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">Total:</h5>
+              <h4 class="mb-0">R$ {{ calculateTotal() | number:'1.2-2' }}</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div *ngIf="errorMessage" class="alert alert-danger">
+      {{ errorMessage }}
+    </div>
+    
+    <div class="d-flex justify-content-end gap-2">
+      <button type="button" class="btn btn-secondary" routerLink="/orders">Cancelar</button>
+      <button type="submit" class="btn btn-success" [disabled]="submitting">
+        <span *ngIf="submitting" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+        Criar Pedido
+      </button>
+    </div>
+  </form>
+</div>

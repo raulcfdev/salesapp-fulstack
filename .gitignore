@@ -1,0 +1,62 @@
+# .NET Core
+**/bin/
+**/obj/
+**/*.user
+**/*.suo
+**/.vs/
+**/_ReSharper*/
+**/*.ReSharper*
+**/*.DotSettings.user
+**/*.dbmdl
+**/*.jfm
+**/*.pfx
+**/*.publishsettings
+**/orleans.codegen.cs
+**/.vscode/
+**/.idea/
+**/PublishProfiles/
+**/*.pubxml
+**/appsettings.Development.json
+**/appsettings.local.json
+
+# Angular
+**/node_modules/
+**/dist/
+**/tmp/
+**/out-tsc/
+**/bazel-out/
+**/.angular/cache
+**/.sass-cache/
+**/connect.lock
+**/coverage/
+**/libpeerconnection.log
+**/testem.log
+**/typings/
+**/.angular/
+**/.npm
+**/npm-debug.log
+**/yarn-error.log
+**/.yarn-integrity
+**/.env
+**/.angular/cache/
+
+# Logs
+**/logs/
+**/*.log
+**/*.log.*
+
+# Sistema operacional
+**/.DS_Store
+**/Thumbs.db
+
+# Arquivos de banco local
+**/*.db
+**/*.sqlite
+**/*.sqlite3
+**/db.lock
+
+# Certificados
+**/*.pfx
+**/*.cer
+**/*.pem
+**/*.key

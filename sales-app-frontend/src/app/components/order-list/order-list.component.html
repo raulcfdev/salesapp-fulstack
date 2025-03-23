@@ -1,0 +1,107 @@
+<!-- src/app/components/order-list/order-list.component.html -->
+
+<div class="container mt-4">
+    <h2 class="mb-4">Lista de Pedidos</h2>
+    
+    <!-- Filtro de status -->
+    <div class="row mb-4">
+      <div class="col-md-4">
+        <div class="input-group">
+          <label class="input-group-text" for="statusFilter">Status</label>
+          <select class="form-select" id="statusFilter" [(ngModel)]="statusFilter">
+            <option value="all">Todos</option>
+            <option [value]="orderStatus.Pending">Pendente</option>
+            <option [value]="orderStatus.Processed">Processado</option>
+          </select>
+          <button class="btn btn-primary" (click)="applyFilter()">Filtrar</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Indicador de carregamento -->
+    <div *ngIf="loading" class="text-center my-5">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Carregando...</span>
+      </div>
+    </div>
+    
+    <!-- Tabela de pedidos -->
+    <div *ngIf="!loading" class="card">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-striped table-hover">
+            <thead class="table-light">
+              <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Cliente</th>
+                <th scope="col">Data</th>
+                <th scope="col">Total</th>
+                <th scope="col">Status</th>
+                <th scope="col">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let order of orders">
+                <td>{{ order.orderId }}</td>
+                <td>{{ order.customerName }}</td>
+                <td>{{ order.orderDate | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td>{{ order.orderTotal | currency:'BRL' }}</td>
+                <td>
+                  <span 
+                    class="badge rounded-pill"
+                    [ngClass]="{
+                      'bg-warning text-dark': order.orderStatus === orderStatus.Pending, 
+                      'bg-success': order.orderStatus === orderStatus.Processed
+                    }"
+                  >
+                    {{ order.orderStatus === orderStatus.Pending ? 'Pendente' : 'Processado' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="btn-group" role="group">
+                    <button 
+                      class="btn btn-sm btn-info me-2" 
+                      [routerLink]="['/orders', order.orderId]"
+                      title="Ver detalhes"
+                    >
+                      <i class="bi bi-eye"></i> Detalhes
+                    </button>
+                    
+                    <button 
+                      *ngIf="order.orderStatus === orderStatus.Pending"
+                      class="btn btn-sm btn-success" 
+                      (click)="updateOrderStatus(order.orderId, orderStatus.Processed)"
+                      title="Processar pedido"
+                    >
+                      <i class="bi bi-check-circle"></i> Processar
+                    </button>
+                    
+                    <button 
+                      *ngIf="order.orderStatus === orderStatus.Processed"
+                      class="btn btn-sm btn-warning" 
+                      (click)="updateOrderStatus(order.orderId, orderStatus.Pending)"
+                      title="Reverter para pendente"
+                    >
+                      <i class="bi bi-arrow-counterclockwise"></i> Reverter
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Mensagem quando não há pedidos -->
+        <div *ngIf="!loading && orders.length === 0" class="alert alert-info">
+          Nenhum pedido encontrado.
+        </div>
+      </div>
+    </div>
+    
+    <!-- Botão para criar novo pedido -->
+    <div class="mt-4">
+      <button class="btn btn-success" routerLink="/orders/new">
+        <i class="bi bi-plus-circle"></i> Novo Pedido
+      </button>
+    </div>
+  </div>
