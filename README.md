@@ -46,6 +46,5 @@ Este repositório contém dois projetos : uma API RESTful desenvolvida em .NET 8
 5. Realize o cadastro do usuário diretamente no frontend para acessar as funcionalidades da aplicação.
 
 ## Informações Adicionais
-- A documentação completa da API está disponível via Swagger em: [https://localhost:7001/swagger](https://localhost:7001/swagger).
 - Os testes unitários podem ser executados através do Test Explorer no Visual Studio.
 - Certifique-se de que o RabbitMQ está em execução para que a integração ocorra corretamente.
