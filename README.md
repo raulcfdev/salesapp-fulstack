@@ -14,11 +14,10 @@ Este repositório contém dois projetos : uma API RESTful desenvolvida em .NET 8
 - **Integração com RabbitMQ:** As credenciais do RabbitMQ estão definidas no arquivo `appsettings.json`.
 
 ### Frontend (Angular)
-- **Angular Material:** Componentes visuais padronizados para uma interface consistente.
+- **Bootstrap**: Framework front-end utilizado para o desenvolvimento da interface..
 - **Formulários Reativos:** Validação e gerenciamento avançado de formulários.
 - **Serviços:** Comunicação eficiente com a API backend.
 - **Interceptors:** Gerenciamento de tokens JWT para as requisições.
-- **Lazy Loading:** Otimização do carregamento dos módulos da aplicação.
 - **Cadastro de Usuário:** Não há credenciais pré-cadastradas. Ao acessar o frontend, é necessário realizar o cadastro do usuário para acessar os métodos da aplicação corretamente.
 
 ## Instruções de Inicialização
