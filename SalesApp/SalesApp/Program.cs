@@ -17,9 +17,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("Angular", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins("http://localhost:4200")
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -59,7 +59,6 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAutoMapper(typeof(MappingProfiles));
-
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
@@ -67,6 +66,7 @@ builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -77,10 +77,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseErrorHandling();
 app.UseHttpsRedirection();
-app.UseCors("AllowAll");
+
+app.UseCors("Angular");
 
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
+
 app.Run();

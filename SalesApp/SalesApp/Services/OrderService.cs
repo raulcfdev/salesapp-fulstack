@@ -57,9 +57,11 @@ namespace SalesApp.Services
             order.OrderStatus = OrderStatus.Pending;
             order.OrderItems = _mapper.Map<List<OrderItem>>(orderDto.OrderItems);
             order.OrderTotal = order.OrderItems.Sum(item => item.Quantity * item.UnitPrice);
+
+
             int orderId = await _orderRepository.AddAsync(order);
 
-           
+
             var orderEvent = new OrderCreatedEvent
             {
                 OrderId = order.OrderId,
@@ -67,7 +69,7 @@ namespace SalesApp.Services
                 OrderTotal = order.OrderTotal
             };
 
-          
+
             _rabbitMQService.SendMessage(orderEvent, "order_queue");
 
             return orderId;

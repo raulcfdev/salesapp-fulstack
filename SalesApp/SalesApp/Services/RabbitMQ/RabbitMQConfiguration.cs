@@ -2,10 +2,10 @@
 {
     public class RabbitMQConfiguration
     {
-        public string HostName { get; set; } = "localhost";
-        public string UserName { get; set; } = "guest";
-        public string Password { get; set; } = "guest";
+        public string HostName { get; set; } 
+        public string UserName { get; set; } 
+        public string Password { get; set; } 
         public int Port { get; set; } = 5672;
-        public string OrderQueueName { get; set; } = "orders_queue";
+        public string OrderQueueName { get; set; } 
     }
 }

@@ -2,6 +2,6 @@
 {
     public interface IRabbitMQService
     {
-        void SendMessage<T>(T message, string queueName);
+        bool SendMessage<T>(T message, string queueName);
     }
 }
