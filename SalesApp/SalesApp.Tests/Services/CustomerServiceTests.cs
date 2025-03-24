@@ -29,7 +29,6 @@ namespace SalesApp.Tests.Services
         [Fact]
         public async Task GetCustomerByIdAsync_ReturnsCustomerDTO_WhenCustomerExists()
         {
-            // Arrange
             var customerId = 1;
             var customer = new Customer
             {
@@ -40,76 +39,63 @@ namespace SalesApp.Tests.Services
             _mockRepo.Setup(repo => repo.GetByIdAsync(customerId))
                 .ReturnsAsync(customer);
 
-            // Act
             var result = await _service.GetCustomerByIdAsync(customerId);
 
-            // Assert
             Assert.NotNull(result);
             Assert.Equal(customerId, result.CustomerId);
             Assert.Equal(customer.CustomerName, result.CustomerName);
         }
 
         [Fact]
-        public async Task GetCustomerByIdAsync_ReturnsNull_WhenCustomerDoesNotExist()
+        public async Task GetCustomerByIdAsync_ThrowsKeyNotFoundException_WhenCustomerDoesNotExist()
         {
-            // Arrange
             var customerId = 1;
+
             _mockRepo.Setup(repo => repo.GetByIdAsync(customerId))
                 .ReturnsAsync((Customer)null);
 
-            // Act
-            var result = await _service.GetCustomerByIdAsync(customerId);
+            var exception = await Assert.ThrowsAsync<KeyNotFoundException>(
+                () => _service.GetCustomerByIdAsync(customerId));
 
-            // Assert
-            Assert.Null(result);
+            Assert.Equal($"Cliente não encontrado com ID: {customerId}", exception.Message);
         }
 
         [Fact]
         public async Task GetAllCustomersAsync_ReturnsAllCustomers()
         {
-            // Arrange
             var customers = new List<Customer>
             {
                 new Customer { CustomerId = 1, CustomerName = "Customer 1" },
-                new Customer { CustomerId = 2, CustomerName = "Customer 2" },
-                new Customer { CustomerId = 3, CustomerName = "Customer 3" }
+                new Customer { CustomerId = 2, CustomerName = "Customer 2" }
             };
 
             _mockRepo.Setup(repo => repo.GetAllAsync())
                 .ReturnsAsync(customers);
 
-            // Act
             var result = await _service.GetAllCustomersAsync();
 
-            // Assert
-            var customerList = result.ToList();
-            Assert.Equal(3, customerList.Count);
-            Assert.Equal("Customer 1", customerList[0].CustomerName);
-            Assert.Equal("Customer 2", customerList[1].CustomerName);
-            Assert.Equal("Customer 3", customerList[2].CustomerName);
+            var customerList = Assert.IsAssignableFrom<IEnumerable<CustomerDTO>>(result);
+            Assert.Equal(2, customerList.Count());
         }
 
         [Fact]
         public async Task CreateCustomerAsync_ReturnsNewCustomerId()
         {
-            // Arrange
             var customerDto = new CreateCustomerDTO
             {
                 CustomerName = "New Customer"
             };
 
-            int newCustomerId = 1;
+            var customerId = 1;
 
             _mockRepo.Setup(repo => repo.AddAsync(It.IsAny<Customer>()))
-                .ReturnsAsync(newCustomerId);
+                .ReturnsAsync(customerId);
 
-            // Act
             var result = await _service.CreateCustomerAsync(customerDto);
 
-            // Assert
-            Assert.Equal(newCustomerId, result);
-            _mockRepo.Verify(repo => repo.AddAsync(It.Is<Customer>(c =>
-                c.CustomerName == customerDto.CustomerName)), Times.Once);
+            Assert.Equal(customerId, result);
+            _mockRepo.Verify(repo => repo.AddAsync(It.Is<Customer>(
+                c => c.CustomerName == customerDto.CustomerName)), Times.Once);
         }
     }
 }

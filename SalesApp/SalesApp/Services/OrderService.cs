@@ -3,6 +3,7 @@ using SalesApp.DTOs;
 using SalesApp.Models;
 using SalesApp.Repositories.Interfaces;
 using SalesApp.Services.Interfaces;
+using SalesApp.Services.RabbitMQ;
 
 namespace SalesApp.Services
 {
@@ -11,15 +12,17 @@ namespace SalesApp.Services
         private readonly IOrderRepository _orderRepository;
         private readonly ICustomerRepository _customerRepository;
         private readonly IMapper _mapper;
-
+        private readonly IRabbitMQService _rabbitMQService;
         public OrderService(
             IOrderRepository orderRepository,
             ICustomerRepository customerRepository,
-            IMapper mapper)
+            IMapper mapper,
+            IRabbitMQService rabbitMQService)
         {
             _orderRepository = orderRepository;
             _customerRepository = customerRepository;
             _mapper = mapper;
+            _rabbitMQService = rabbitMQService;
         }
 
         public async Task<OrderDTO> GetOrderByIdAsync(int orderId)
@@ -54,7 +57,20 @@ namespace SalesApp.Services
             order.OrderStatus = OrderStatus.Pending;
             order.OrderItems = _mapper.Map<List<OrderItem>>(orderDto.OrderItems);
             order.OrderTotal = order.OrderItems.Sum(item => item.Quantity * item.UnitPrice);
-            return await _orderRepository.AddAsync(order);
+            int orderId = await _orderRepository.AddAsync(order);
+
+           
+            var orderEvent = new OrderCreatedEvent
+            {
+                OrderId = order.OrderId,
+                OrderDate = order.OrderDate,
+                OrderTotal = order.OrderTotal
+            };
+
+          
+            _rabbitMQService.SendMessage(orderEvent, "order_queue");
+
+            return orderId;
         }
 
         public async Task UpdateOrderStatusAsync(int orderId, OrderStatus status)
