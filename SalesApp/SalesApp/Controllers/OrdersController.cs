@@ -11,17 +11,14 @@ namespace SalesApp.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly IOrderService _orderService;
-
         public OrdersController(IOrderService orderService)
         {
             _orderService = orderService;
         }
-
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<OrderDTO>>> GetOrders([FromQuery] string status = null)
+        [HttpGet("list")]
+        public async Task<ActionResult<IEnumerable<OrderDTO>>> ListOrdersWithFilter([FromQuery] string status = null)
         {
             IEnumerable<OrderDTO> orders;
-
             if (!string.IsNullOrEmpty(status) && Enum.TryParse<OrderStatus>(status, true, out var orderStatus))
             {
                 orders = await _orderService.GetOrdersByStatusAsync(orderStatus);
@@ -30,36 +27,31 @@ namespace SalesApp.Controllers
             {
                 orders = await _orderService.GetAllOrdersAsync();
             }
-
             return Ok(orders);
         }
-
-        [HttpGet("{orderId}")]
-        public async Task<ActionResult<OrderDTO>> GetOrder(int orderId)
+        [HttpGet("details/{orderId}")]
+        public async Task<ActionResult<OrderDTO>> FindOrderById(int orderId)
         {
             var order = await _orderService.GetOrderByIdAsync(orderId);
             if (order == null)
                 return NotFound();
-
             return Ok(order);
         }
-
-        [HttpPost]
-        public async Task<ActionResult<int>> CreateOrder(CreateOrderDTO orderDto)
+        [HttpPost("create")]
+        public async Task<ActionResult<int>> PlaceNewOrder(CreateOrderDTO orderDto)
         {
             try
             {
                 var orderId = await _orderService.CreateOrderAsync(orderDto);
-                return CreatedAtAction(nameof(GetOrder), new { orderId }, orderId);
+                return CreatedAtAction(nameof(FindOrderById), new { orderId }, orderId);
             }
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
         }
-
-        [HttpPut("{orderId}/status")]
-        public async Task<IActionResult> UpdateOrderStatus(int orderId, [FromBody] OrderStatusUpdateDTO statusUpdate)
+        [HttpPut("update-status/{orderId}")]
+        public async Task<IActionResult> ChangeOrderStatus(int orderId, [FromBody] OrderStatusUpdateDTO statusUpdate)
         {
             try
             {
@@ -67,7 +59,6 @@ namespace SalesApp.Controllers
                 {
                     return BadRequest("Status inválido");
                 }
-
                 await _orderService.UpdateOrderStatusAsync(orderId, orderStatus);
                 return NoContent();
             }

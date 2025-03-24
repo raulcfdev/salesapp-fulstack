@@ -1,5 +1,3 @@
-// src/app/services/customer.service.ts
-
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -15,14 +13,14 @@ export class CustomerService {
   constructor(private http: HttpClient) { }
   
   getCustomers(): Observable<CustomerDTO[]> {
-    return this.http.get<CustomerDTO[]>(this.apiUrl);
+    return this.http.get<CustomerDTO[]>(`${this.apiUrl}/list`);
   }
 
   getCustomerById(id: number): Observable<CustomerDTO> {
-    return this.http.get<CustomerDTO>(`${this.apiUrl}/${id}`);
+    return this.http.get<CustomerDTO>(`${this.apiUrl}/details/${id}`);
   }
 
   createCustomer(customer: any): Observable<number> {
-    return this.http.post<number>(this.apiUrl, customer);
+    return this.http.post<number>(`${this.apiUrl}/add`, customer);
   }
 }

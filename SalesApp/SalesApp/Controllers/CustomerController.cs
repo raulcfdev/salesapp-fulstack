@@ -9,34 +9,29 @@ namespace SalesApp.Controllers
     public class CustomersController : ControllerBase
     {
         private readonly ICustomerService _customerService;
-
         public CustomersController(ICustomerService customerService)
         {
             _customerService = customerService;
         }
-
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<CustomerDTO>>> GetAllCustomers()
+        [HttpGet("list")]
+        public async Task<ActionResult<IEnumerable<CustomerDTO>>> ListAllCustomers()
         {
             var customers = await _customerService.GetAllCustomersAsync();
             return Ok(customers);
         }
-
-        [HttpGet("{customerId}")]
-        public async Task<ActionResult<CustomerDTO>> GetCustomer(int customerId)
+        [HttpGet("details/{customerId}")]
+        public async Task<ActionResult<CustomerDTO>> FindCustomerById(int customerId)
         {
             var customer = await _customerService.GetCustomerByIdAsync(customerId);
             if (customer == null)
                 return NotFound();
-
             return Ok(customer);
         }
-
-        [HttpPost]
-        public async Task<ActionResult<int>> CreateCustomer(CreateCustomerDTO customerDto)
+        [HttpPost("add")]
+        public async Task<ActionResult<int>> AddNewCustomer(CreateCustomerDTO customerDto)
         {
             var customerId = await _customerService.CreateCustomerAsync(customerDto);
-            return CreatedAtAction(nameof(GetCustomer), new { customerId }, customerId);
+            return CreatedAtAction(nameof(FindCustomerById), new { customerId }, customerId);
         }
     }
 }
