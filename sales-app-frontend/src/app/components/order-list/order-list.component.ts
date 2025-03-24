@@ -17,6 +17,9 @@ export class OrderListComponent implements OnInit {
   loading = false;
   statusFilter: OrderStatus | 'all' = 'all';
   orderStatus = OrderStatus;
+  
+  selectedOrder: OrderDTO | null = null;
+  showDetailsModal = false;
 
   constructor(private orderService: OrderService) { }
 
@@ -57,5 +60,25 @@ export class OrderListComponent implements OnInit {
 
   applyFilter(): void {
     this.loadOrders();
+  }
+
+  openDetailsModal(orderId: number): void {
+    this.loading = true;
+    this.orderService.getOrderById(orderId).subscribe({
+      next: (order) => {
+        this.selectedOrder = order;
+        this.showDetailsModal = true;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error loading order details', error);
+        this.loading = false;
+      }
+    });
+  }
+
+  closeDetailsModal(): void {
+    this.showDetailsModal = false;
+    this.selectedOrder = null;
   }
 }
