@@ -1,9 +1,9 @@
-<!-- src/app/components/order-list/order-list.component.html -->
+
 
 <div class="container mt-4">
     <h2 class="mb-4">Lista de Pedidos</h2>
     
-    <!-- Filtro de status -->
+    
     <div class="row mb-4">
       <div class="col-md-4">
         <div class="input-group">
@@ -18,14 +18,14 @@
       </div>
     </div>
     
-    <!-- Indicador de carregamento -->
+   
     <div *ngIf="loading" class="text-center my-5">
       <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Carregando...</span>
       </div>
     </div>
     
-    <!-- Tabela de pedidos -->
+   
     <div *ngIf="!loading" class="card">
       <div class="card-body">
         <div class="table-responsive">
@@ -91,14 +91,14 @@
           </table>
         </div>
         
-        <!-- Mensagem quando não há pedidos -->
+       
         <div *ngIf="!loading && orders.length === 0" class="alert alert-info">
           Nenhum pedido encontrado.
         </div>
       </div>
     </div>
     
-    <!-- Botão para criar novo pedido -->
+    
     <div class="mt-4">
       <button class="btn btn-success" routerLink="/orders/new">
         <i class="bi bi-plus-circle"></i> Novo Pedido

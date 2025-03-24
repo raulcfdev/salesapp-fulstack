@@ -1,5 +1,3 @@
-// src/app/services/order.service.ts
-
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -20,22 +18,22 @@ export class OrderService {
   constructor(private http: HttpClient) { }
   
   getOrders(): Observable<OrderDTO[]> {
-    return this.http.get<OrderDTO[]>(this.apiUrl);
+    return this.http.get<OrderDTO[]>(`${this.apiUrl}/list`);
   }
 
   getOrdersByStatus(status: OrderStatus): Observable<OrderDTO[]> {
-    return this.http.get<OrderDTO[]>(`${this.apiUrl}?status=${status}`);
+    return this.http.get<OrderDTO[]>(`${this.apiUrl}/list?status=${status}`);
   }
 
   getOrderById(id: number): Observable<OrderDTO> {
-    return this.http.get<OrderDTO>(`${this.apiUrl}/${id}`);
+    return this.http.get<OrderDTO>(`${this.apiUrl}/details/${id}`);
   }
 
   createOrder(orderData: CreateOrderDTO): Observable<number> {
-    return this.http.post<number>(this.apiUrl, orderData);
+    return this.http.post<number>(`${this.apiUrl}/create`, orderData);
   }
 
   updateOrderStatus(id: number, statusUpdate: OrderStatusUpdateDTO): Observable<any> {
-    return this.http.put(`${this.apiUrl}/${id}/status`, statusUpdate);
+    return this.http.put(`${this.apiUrl}/update-status/${id}`, statusUpdate);
   }
 }
