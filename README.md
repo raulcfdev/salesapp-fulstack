@@ -28,6 +28,7 @@ Este repositório contém dois projetos : uma API RESTful desenvolvida em .NET 8
 - Node.js e npm
 - Angular CLI
 - RabbitMQ Server
+- Microsoft SQL Server
 
 ### Iniciando o Backend (.NET 8)
 1. Abra o arquivo de solução (`.sln`) no Visual Studio.
