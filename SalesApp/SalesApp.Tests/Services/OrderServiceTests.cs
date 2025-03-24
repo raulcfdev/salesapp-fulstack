@@ -4,12 +4,13 @@ using SalesApp.DTOs;
 using SalesApp.Models;
 using SalesApp.Repositories.Interfaces;
 using SalesApp.Services;
+using SalesApp.Services.RabbitMQ;
 using SalesApp.Tests.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using Xunit;
 
 namespace SalesApp.Tests.Services
 {
@@ -17,6 +18,7 @@ namespace SalesApp.Tests.Services
     {
         private readonly Mock<IOrderRepository> _mockOrderRepo;
         private readonly Mock<ICustomerRepository> _mockCustomerRepo;
+        private readonly Mock<IRabbitMQService> _mockRabbitMQService;
         private readonly IMapper _mapper;
         private readonly OrderService _service;
 
@@ -24,14 +26,19 @@ namespace SalesApp.Tests.Services
         {
             _mockOrderRepo = new Mock<IOrderRepository>();
             _mockCustomerRepo = new Mock<ICustomerRepository>();
+            _mockRabbitMQService = new Mock<IRabbitMQService>();
             _mapper = MapperHelper.GetMapper();
-            _service = new OrderService(_mockOrderRepo.Object, _mockCustomerRepo.Object, _mapper);
+
+            _service = new OrderService(
+                _mockOrderRepo.Object,
+                _mockCustomerRepo.Object,
+                _mapper,
+                _mockRabbitMQService.Object);
         }
 
         [Fact]
         public async Task GetOrderByIdAsync_ReturnsOrderDTO_WhenOrderExists()
         {
-            // Arrange
             var orderId = 1;
             var customer = new Customer { CustomerId = 1, CustomerName = "Test Customer" };
             var order = new Order
@@ -59,10 +66,8 @@ namespace SalesApp.Tests.Services
             _mockOrderRepo.Setup(repo => repo.GetOrderWithDetailsAsync(orderId))
                 .ReturnsAsync(order);
 
-            // Act
             var result = await _service.GetOrderByIdAsync(orderId);
 
-            // Assert
             Assert.NotNull(result);
             Assert.Equal(orderId, result.OrderId);
             Assert.Equal(customer.CustomerName, result.CustomerName);
@@ -75,22 +80,18 @@ namespace SalesApp.Tests.Services
         [Fact]
         public async Task GetOrderByIdAsync_ReturnsNull_WhenOrderDoesNotExist()
         {
-            // Arrange
             var orderId = 1;
             _mockOrderRepo.Setup(repo => repo.GetOrderWithDetailsAsync(orderId))
                 .ReturnsAsync((Order)null);
 
-            // Act
             var result = await _service.GetOrderByIdAsync(orderId);
 
-            // Assert
             Assert.Null(result);
         }
 
         [Fact]
         public async Task GetAllOrdersAsync_ReturnsAllOrders()
         {
-            // Arrange
             var customer = new Customer { CustomerId = 1, CustomerName = "Test Customer" };
             var orders = new List<Order>
             {
@@ -117,10 +118,8 @@ namespace SalesApp.Tests.Services
             _mockOrderRepo.Setup(repo => repo.GetAllAsync())
                 .ReturnsAsync(orders);
 
-            // Act
             var result = await _service.GetAllOrdersAsync();
 
-            // Assert
             var orderList = result.ToList();
             Assert.Equal(2, orderList.Count);
             Assert.Equal(1, orderList[0].OrderId);
@@ -130,7 +129,6 @@ namespace SalesApp.Tests.Services
         [Fact]
         public async Task GetOrdersByStatusAsync_ReturnsOrdersWithSpecifiedStatus()
         {
-            // Arrange
             var customer = new Customer { CustomerId = 1, CustomerName = "Test Customer" };
             var orders = new List<Order>
             {
@@ -157,10 +155,8 @@ namespace SalesApp.Tests.Services
             _mockOrderRepo.Setup(repo => repo.GetOrdersByStatusAsync(OrderStatus.Pending))
                 .ReturnsAsync(orders);
 
-            // Act
             var result = await _service.GetOrdersByStatusAsync(OrderStatus.Pending);
 
-            // Assert
             var orderList = result.ToList();
             Assert.Equal(2, orderList.Count);
             Assert.All(orderList, item => Assert.Equal(OrderStatus.Pending.ToString(), item.OrderStatus));
@@ -169,7 +165,6 @@ namespace SalesApp.Tests.Services
         [Fact]
         public async Task CreateOrderAsync_ReturnsNewOrderId_WhenCustomerExists()
         {
-            // Arrange
             var customerId = 1;
             var customer = new Customer { CustomerId = customerId, CustomerName = "Test Customer" };
             var orderDto = new CreateOrderDTO
@@ -192,23 +187,28 @@ namespace SalesApp.Tests.Services
                 .ReturnsAsync(customer);
 
             _mockOrderRepo.Setup(repo => repo.AddAsync(It.IsAny<Order>()))
-                .ReturnsAsync(newOrderId);
+                .ReturnsAsync(newOrderId)
+                .Callback<Order>(o => o.OrderId = newOrderId);
 
-            // Act
             var result = await _service.CreateOrderAsync(orderDto);
 
-            // Assert
             Assert.Equal(newOrderId, result);
+
             _mockOrderRepo.Verify(repo => repo.AddAsync(It.Is<Order>(o =>
                 o.CustomerId == customerId &&
                 o.OrderItems.Count == 1 &&
                 o.OrderTotal == 100.0m)), Times.Once);
+
+            _mockRabbitMQService.Verify(svc =>
+                svc.SendMessage(
+                    It.IsAny<OrderCreatedEvent>(),
+                    "order_queue"),
+                Times.Once);
         }
 
         [Fact]
         public async Task CreateOrderAsync_ThrowsException_WhenCustomerDoesNotExist()
         {
-            // Arrange
             var customerId = 1;
             var orderDto = new CreateOrderDTO
             {
@@ -227,15 +227,12 @@ namespace SalesApp.Tests.Services
             _mockCustomerRepo.Setup(repo => repo.GetByIdAsync(customerId))
                 .ReturnsAsync((Customer)null);
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<Exception>(() => _service.CreateOrderAsync(orderDto));
-            Assert.Equal("Cliente não encontrado", exception.Message);
+            await Assert.ThrowsAsync<KeyNotFoundException>(() => _service.CreateOrderAsync(orderDto));
         }
 
         [Fact]
         public async Task UpdateOrderStatusAsync_UpdatesStatus_WhenOrderExists()
         {
-            // Arrange
             var orderId = 1;
             var order = new Order
             {
@@ -249,10 +246,8 @@ namespace SalesApp.Tests.Services
             _mockOrderRepo.Setup(repo => repo.UpdateAsync(It.IsAny<Order>()))
                 .Returns(Task.CompletedTask);
 
-            // Act
             await _service.UpdateOrderStatusAsync(orderId, OrderStatus.Processed);
 
-            // Assert
             _mockOrderRepo.Verify(repo => repo.UpdateAsync(It.Is<Order>(o =>
                 o.OrderId == orderId &&
                 o.OrderStatus == OrderStatus.Processed)), Times.Once);
@@ -261,16 +256,13 @@ namespace SalesApp.Tests.Services
         [Fact]
         public async Task UpdateOrderStatusAsync_ThrowsException_WhenOrderDoesNotExist()
         {
-            // Arrange
             var orderId = 1;
 
             _mockOrderRepo.Setup(repo => repo.GetByIdAsync(orderId))
                 .ReturnsAsync((Order)null);
 
-            // Act & Assert
-            var exception = await Assert.ThrowsAsync<Exception>(() =>
+            await Assert.ThrowsAsync<KeyNotFoundException>(() =>
                 _service.UpdateOrderStatusAsync(orderId, OrderStatus.Processed));
-            Assert.Equal("Pedido não encontrado", exception.Message);
         }
     }
 }
